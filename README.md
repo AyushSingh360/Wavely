@@ -59,7 +59,7 @@
 
 1. **Clone the repository**
    ```bash
-   git clone <repository-url>
+   git clone https://github.com/AyushSingh360/Wavely
    cd wavely
    ```
 
