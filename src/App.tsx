@@ -20,7 +20,7 @@ function App() {
     setActiveChat,
     sendMessage,
     markAsRead
-  } = useMessages(user!);
+  } = useMessages(user);
 
   const {
     currentGame,

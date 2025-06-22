@@ -27,7 +27,20 @@ const mockUsers: User[] = [
   }
 ];
 
-export const useMessages = (currentUser: AuthUser) => {
+export const useMessages = (currentUser: AuthUser | null) => {
+  // Early return with default values if user is null
+  if (!currentUser) {
+    return {
+      chats: [],
+      activeChat: null,
+      setActiveChat: () => {},
+      sendMessage: () => {},
+      markAsRead: () => {},
+      users: mockUsers,
+      generateAIResponse: () => Promise.resolve()
+    };
+  }
+
   const [chats, setChats] = useState<Chat[]>([
     {
       id: '1',
