@@ -22,6 +22,7 @@ export interface Message {
 export interface User {
   id: string;
   name: string;
+  email?: string;
   avatar: string;
   isOnline: boolean;
   lastSeen?: Date;
@@ -59,4 +60,18 @@ export interface CallState {
   participant?: User;
   duration: number;
   status: 'connecting' | 'connected' | 'ended';
+}
+
+export interface AuthUser {
+  id: string;
+  name: string;
+  email: string;
+  avatar: string;
+  createdAt: Date;
+}
+
+export interface AuthState {
+  user: AuthUser | null;
+  isAuthenticated: boolean;
+  isLoading: boolean;
 }

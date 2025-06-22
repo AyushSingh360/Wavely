@@ -1,16 +1,19 @@
 import React, { useState } from 'react';
 import { motion } from 'framer-motion';
-import { Search, Settings, BarChart3, Waves } from 'lucide-react';
+import { Search, Settings, BarChart3, Waves, LogOut, User } from 'lucide-react';
 import { ThemeToggle } from '../ui/ThemeToggle';
 import { GameStats } from '../game/GameStats';
-import { GameStats as IGameStats } from '../../types';
+import { GameStats as IGameStats, AuthUser } from '../../types';
 
 interface HeaderProps {
   gameStats: IGameStats;
+  user: AuthUser;
+  onLogout: () => void;
 }
 
-export const Header: React.FC<HeaderProps> = ({ gameStats }) => {
+export const Header: React.FC<HeaderProps> = ({ gameStats, user, onLogout }) => {
   const [showStats, setShowStats] = useState(false);
+  const [showUserMenu, setShowUserMenu] = useState(false);
   const [searchQuery, setSearchQuery] = useState('');
 
   return (
@@ -82,9 +85,68 @@ export const Header: React.FC<HeaderProps> = ({ gameStats }) => {
             </motion.button>
 
             <ThemeToggle />
+
+            {/* User Menu */}
+            <div className="relative">
+              <motion.button
+                onClick={() => setShowUserMenu(!showUserMenu)}
+                className="flex items-center space-x-2 p-2 hover:bg-gray-100 dark:hover:bg-gray-800 rounded-lg transition-colors"
+                whileHover={{ scale: 1.05 }}
+                whileTap={{ scale: 0.95 }}
+              >
+                <img
+                  src={user.avatar}
+                  alt={user.name}
+                  className="w-8 h-8 rounded-full object-cover"
+                />
+                <span className="hidden sm:block text-sm font-medium text-gray-900 dark:text-white">
+                  {user.name}
+                </span>
+              </motion.button>
+
+              {showUserMenu && (
+                <motion.div
+                  initial={{ opacity: 0, scale: 0.95, y: -10 }}
+                  animate={{ opacity: 1, scale: 1, y: 0 }}
+                  className="absolute right-0 mt-2 w-48 bg-white dark:bg-gray-800 rounded-lg shadow-lg border border-gray-200 dark:border-gray-700 py-2 z-50"
+                >
+                  <div className="px-4 py-2 border-b border-gray-200 dark:border-gray-700">
+                    <p className="text-sm font-medium text-gray-900 dark:text-white">{user.name}</p>
+                    <p className="text-xs text-gray-500 dark:text-gray-400">{user.email}</p>
+                  </div>
+                  
+                  <button
+                    className="w-full px-4 py-2 text-left text-sm text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700 flex items-center space-x-2"
+                    onClick={() => setShowUserMenu(false)}
+                  >
+                    <User className="w-4 h-4" />
+                    <span>Profile</span>
+                  </button>
+                  
+                  <button
+                    onClick={() => {
+                      setShowUserMenu(false);
+                      onLogout();
+                    }}
+                    className="w-full px-4 py-2 text-left text-sm text-red-600 dark:text-red-400 hover:bg-red-50 dark:hover:bg-red-900/20 flex items-center space-x-2"
+                  >
+                    <LogOut className="w-4 h-4" />
+                    <span>Sign Out</span>
+                  </button>
+                </motion.div>
+              )}
+            </div>
           </div>
         </div>
       </motion.header>
+
+      {/* Click outside to close user menu */}
+      {showUserMenu && (
+        <div
+          className="fixed inset-0 z-40"
+          onClick={() => setShowUserMenu(false)}
+        />
+      )}
 
       <GameStats
         stats={gameStats}

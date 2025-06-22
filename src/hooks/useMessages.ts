@@ -1,5 +1,5 @@
 import { useState, useCallback, useEffect } from 'react';
-import { Message, Chat, User } from '../types';
+import { Message, Chat, User, AuthUser } from '../types';
 import { aiService } from '../services/aiService';
 
 const mockUsers: User[] = [
@@ -27,14 +27,7 @@ const mockUsers: User[] = [
   }
 ];
 
-const currentUser: User = {
-  id: 'current',
-  name: 'You',
-  avatar: 'https://images.pexels.com/photos/614810/pexels-photo-614810.jpeg?auto=compress&cs=tinysrgb&w=150&h=150&fit=crop',
-  isOnline: true
-};
-
-export const useMessages = () => {
+export const useMessages = (currentUser: AuthUser) => {
   const [chats, setChats] = useState<Chat[]>([
     {
       id: '1',
@@ -44,7 +37,7 @@ export const useMessages = () => {
           id: '1',
           senderId: mockUsers[0].id,
           receiverId: currentUser.id,
-          content: 'Hello! I\'m your AI assistant. I can chat with you and even play Tic Tac Toe! What would you like to talk about? 😊',
+          content: `Hello ${currentUser.name}! I'm your AI assistant. I can chat with you and even play Tic Tac Toe! What would you like to talk about? 😊`,
           timestamp: new Date(Date.now() - 1000 * 60 * 10),
           status: 'read',
           type: 'text'
@@ -60,7 +53,7 @@ export const useMessages = () => {
           id: '4',
           senderId: mockUsers[1].id,
           receiverId: currentUser.id,
-          content: 'Hi there! I\'m Luna, your creative AI companion. Ready for some fun conversations and games? 🌙✨',
+          content: `Hi there ${currentUser.name}! I'm Luna, your creative AI companion. Ready for some fun conversations and games? 🌙✨`,
           timestamp: new Date(Date.now() - 1000 * 60 * 30),
           status: 'delivered',
           type: 'text'
@@ -76,7 +69,7 @@ export const useMessages = () => {
           id: '5',
           senderId: mockUsers[2].id,
           receiverId: currentUser.id,
-          content: 'Greetings! I\'m Nova, your strategic gaming AI. Want to challenge me to a game of Tic Tac Toe? I promise to make it interesting! 🎮',
+          content: `Greetings ${currentUser.name}! I'm Nova, your strategic gaming AI. Want to challenge me to a game of Tic Tac Toe? I promise to make it interesting! 🎮`,
           timestamp: new Date(Date.now() - 1000 * 60 * 60),
           status: 'read',
           type: 'text'
@@ -155,7 +148,7 @@ export const useMessages = () => {
     if (type !== 'game-invite' && type !== 'secret') {
       generateAIResponse(chatId, newMessage);
     }
-  }, [chats]);
+  }, [chats, currentUser.id]);
 
   const generateAIResponse = useCallback(async (chatId: string, userMessage: Message) => {
     const chat = chats.find(c => c.id === chatId);
@@ -258,7 +251,7 @@ export const useMessages = () => {
         return c;
       }));
     }
-  }, [chats]);
+  }, [chats, currentUser.id]);
 
   const markAsRead = useCallback((chatId: string) => {
     setChats(prev => prev.map(chat => {
@@ -273,7 +266,7 @@ export const useMessages = () => {
       }
       return chat;
     }));
-  }, []);
+  }, [currentUser.id]);
 
   // Clean up expired secret messages
   useEffect(() => {
@@ -308,7 +301,6 @@ export const useMessages = () => {
     setActiveChat,
     sendMessage,
     markAsRead,
-    currentUser,
     users: mockUsers,
     generateAIResponse
   };
