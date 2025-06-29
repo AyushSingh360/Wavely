@@ -28,74 +28,71 @@ const mockUsers: User[] = [
 ];
 
 export const useMessages = (currentUser: AuthUser | null) => {
-  // Early return with default values if user is null
-  if (!currentUser) {
-    return {
-      chats: [],
-      activeChat: null,
-      setActiveChat: () => {},
-      sendMessage: () => {},
-      markAsRead: () => {},
-      users: mockUsers,
-      generateAIResponse: () => Promise.resolve()
-    };
-  }
-
-  const [chats, setChats] = useState<Chat[]>([
-    {
-      id: '1',
-      participants: [currentUser, mockUsers[0]],
-      messages: [
-        {
-          id: '1',
-          senderId: mockUsers[0].id,
-          receiverId: currentUser.id,
-          content: `Hello ${currentUser.name}! I'm your AI assistant. I can chat with you and even play Tic Tac Toe! What would you like to talk about? 😊`,
-          timestamp: new Date(Date.now() - 1000 * 60 * 10),
-          status: 'read',
-          type: 'text'
-        }
-      ],
-      unreadCount: 0
-    },
-    {
-      id: '2',
-      participants: [currentUser, mockUsers[1]],
-      messages: [
-        {
-          id: '4',
-          senderId: mockUsers[1].id,
-          receiverId: currentUser.id,
-          content: `Hi there ${currentUser.name}! I'm Luna, your creative AI companion. Ready for some fun conversations and games? 🌙✨`,
-          timestamp: new Date(Date.now() - 1000 * 60 * 30),
-          status: 'delivered',
-          type: 'text'
-        }
-      ],
-      unreadCount: 1
-    },
-    {
-      id: '3',
-      participants: [currentUser, mockUsers[2]],
-      messages: [
-        {
-          id: '5',
-          senderId: mockUsers[2].id,
-          receiverId: currentUser.id,
-          content: `Greetings ${currentUser.name}! I'm Nova, your strategic gaming AI. Want to challenge me to a game of Tic Tac Toe? I promise to make it interesting! 🎮`,
-          timestamp: new Date(Date.now() - 1000 * 60 * 60),
-          status: 'read',
-          type: 'text'
-        }
-      ],
-      unreadCount: 0
-    }
-  ]);
-
-  const [activeChat, setActiveChat] = useState<string | null>('1');
+  // Initialize all hooks unconditionally at the top level
+  const [chats, setChats] = useState<Chat[]>([]);
+  const [activeChat, setActiveChat] = useState<string | null>(null);
   const [typingUsers, setTypingUsers] = useState<Set<string>>(new Set());
 
+  // Initialize chats when currentUser becomes available
+  useEffect(() => {
+    if (currentUser) {
+      setChats([
+        {
+          id: '1',
+          participants: [currentUser, mockUsers[0]],
+          messages: [
+            {
+              id: '1',
+              senderId: mockUsers[0].id,
+              receiverId: currentUser.id,
+              content: `Hello ${currentUser.name}! I'm your AI assistant. I can chat with you and even play Tic Tac Toe! What would you like to talk about? 😊`,
+              timestamp: new Date(Date.now() - 1000 * 60 * 10),
+              status: 'read',
+              type: 'text'
+            }
+          ],
+          unreadCount: 0
+        },
+        {
+          id: '2',
+          participants: [currentUser, mockUsers[1]],
+          messages: [
+            {
+              id: '4',
+              senderId: mockUsers[1].id,
+              receiverId: currentUser.id,
+              content: `Hi there ${currentUser.name}! I'm Luna, your creative AI companion. Ready for some fun conversations and games? 🌙✨`,
+              timestamp: new Date(Date.now() - 1000 * 60 * 30),
+              status: 'delivered',
+              type: 'text'
+            }
+          ],
+          unreadCount: 1
+        },
+        {
+          id: '3',
+          participants: [currentUser, mockUsers[2]],
+          messages: [
+            {
+              id: '5',
+              senderId: mockUsers[2].id,
+              receiverId: currentUser.id,
+              content: `Greetings ${currentUser.name}! I'm Nova, your strategic gaming AI. Want to challenge me to a game of Tic Tac Toe? I promise to make it interesting! 🎮`,
+              timestamp: new Date(Date.now() - 1000 * 60 * 60),
+              status: 'read',
+              type: 'text'
+            }
+          ],
+          unreadCount: 0
+        }
+      ]);
+      setActiveChat('1');
+    }
+  }, [currentUser]);
+
   const sendMessage = useCallback((chatId: string, content: string, type: Message['type'] = 'text') => {
+    if (!currentUser) return;
+
     const chat = chats.find(c => c.id === chatId);
     if (!chat) return;
 
@@ -161,9 +158,11 @@ export const useMessages = (currentUser: AuthUser | null) => {
     if (type !== 'game-invite' && type !== 'secret') {
       generateAIResponse(chatId, newMessage);
     }
-  }, [chats, currentUser.id]);
+  }, [chats, currentUser]);
 
   const generateAIResponse = useCallback(async (chatId: string, userMessage: Message) => {
+    if (!currentUser) return;
+
     const chat = chats.find(c => c.id === chatId);
     if (!chat) return;
 
@@ -264,9 +263,11 @@ export const useMessages = (currentUser: AuthUser | null) => {
         return c;
       }));
     }
-  }, [chats, currentUser.id]);
+  }, [chats, currentUser]);
 
   const markAsRead = useCallback((chatId: string) => {
+    if (!currentUser) return;
+
     setChats(prev => prev.map(chat => {
       if (chat.id === chatId) {
         return {
@@ -279,7 +280,7 @@ export const useMessages = (currentUser: AuthUser | null) => {
       }
       return chat;
     }));
-  }, [currentUser.id]);
+  }, [currentUser]);
 
   // Clean up expired secret messages
   useEffect(() => {
