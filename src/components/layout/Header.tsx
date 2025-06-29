@@ -3,16 +3,19 @@ import { motion } from 'framer-motion';
 import { Search, Settings, BarChart3, Waves, LogOut, User } from 'lucide-react';
 import { ThemeToggle } from '../ui/ThemeToggle';
 import { GameStats } from '../game/GameStats';
+import { SettingsModal } from '../settings/SettingsModal';
 import { GameStats as IGameStats, AuthUser } from '../../types';
 
 interface HeaderProps {
   gameStats: IGameStats;
   user: AuthUser;
   onLogout: () => void;
+  onUpdateUser: (updates: Partial<AuthUser>) => void;
 }
 
-export const Header: React.FC<HeaderProps> = ({ gameStats, user, onLogout }) => {
+export const Header: React.FC<HeaderProps> = ({ gameStats, user, onLogout, onUpdateUser }) => {
   const [showStats, setShowStats] = useState(false);
+  const [showSettings, setShowSettings] = useState(false);
   const [showUserMenu, setShowUserMenu] = useState(false);
   const [searchQuery, setSearchQuery] = useState('');
 
@@ -77,6 +80,7 @@ export const Header: React.FC<HeaderProps> = ({ gameStats, user, onLogout }) => 
             </motion.button>
 
             <motion.button
+              onClick={() => setShowSettings(true)}
               className="p-2 text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-200 hover:bg-gray-100 dark:hover:bg-gray-800 rounded-lg transition-colors"
               whileHover={{ scale: 1.1 }}
               whileTap={{ scale: 0.9 }}
@@ -116,11 +120,14 @@ export const Header: React.FC<HeaderProps> = ({ gameStats, user, onLogout }) => 
                   </div>
                   
                   <button
+                    onClick={() => {
+                      setShowUserMenu(false);
+                      setShowSettings(true);
+                    }}
                     className="w-full px-4 py-2 text-left text-sm text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700 flex items-center space-x-2"
-                    onClick={() => setShowUserMenu(false)}
                   >
                     <User className="w-4 h-4" />
-                    <span>Profile</span>
+                    <span>Profile Settings</span>
                   </button>
                   
                   <button
@@ -152,6 +159,14 @@ export const Header: React.FC<HeaderProps> = ({ gameStats, user, onLogout }) => 
         stats={gameStats}
         isVisible={showStats}
         onClose={() => setShowStats(false)}
+      />
+
+      <SettingsModal
+        isOpen={showSettings}
+        onClose={() => setShowSettings(false)}
+        user={user}
+        onUpdateUser={onUpdateUser}
+        onLogout={onLogout}
       />
     </>
   );

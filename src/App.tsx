@@ -87,6 +87,13 @@ function App() {
     }
   };
 
+  const handleUpdateUser = (updates: Partial<typeof user>) => {
+    // In a real app, this would update the user in the backend
+    // For now, we'll just update localStorage
+    const updatedUser = { ...user, ...updates };
+    localStorage.setItem('wavely_auth_user', JSON.stringify(updatedUser));
+  };
+
   const activeChatData = chats.find(c => c.id === activeChat);
 
   return (
@@ -102,6 +109,7 @@ function App() {
           gameStats={gameStats} 
           user={user}
           onLogout={logout}
+          onUpdateUser={handleUpdateUser}
         />
         
         <div className="flex-1 flex overflow-hidden">
