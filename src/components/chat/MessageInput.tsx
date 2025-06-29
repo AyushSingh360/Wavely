@@ -1,7 +1,8 @@
 import React, { useState, useRef } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Send, Smile, Gamepad2, Paperclip, Flame, Timer } from 'lucide-react';
+import { Send, Smile, Gamepad2, Paperclip, Flame, Timer, MessageSquare, ChevronDown } from 'lucide-react';
 import { Button } from '../ui/Button';
+import { savedReplies } from '../../hooks/useMessages';
 
 interface MessageInputProps {
   onSendMessage: (message: string, type?: 'text' | 'secret') => void;
@@ -19,7 +20,9 @@ export const MessageInput: React.FC<MessageInputProps> = ({
   const [message, setMessage] = useState('');
   const [showEmojis, setShowEmojis] = useState(false);
   const [showSecretOptions, setShowSecretOptions] = useState(false);
+  const [showSavedReplies, setShowSavedReplies] = useState(false);
   const [secretDuration, setSecretDuration] = useState(30); // seconds
+  const [selectedCategory, setSelectedCategory] = useState<string>('all');
   const inputRef = useRef<HTMLInputElement>(null);
 
   const handleSubmit = (e: React.FormEvent, isSecret = false) => {
@@ -47,6 +50,17 @@ export const MessageInput: React.FC<MessageInputProps> = ({
     }
   };
 
+  const useSavedReply = (reply: string) => {
+    setMessage(reply);
+    setShowSavedReplies(false);
+    inputRef.current?.focus();
+  };
+
+  const categories = ['all', ...Array.from(new Set(savedReplies.map(reply => reply.category)))];
+  const filteredReplies = selectedCategory === 'all' 
+    ? savedReplies 
+    : savedReplies.filter(reply => reply.category === selectedCategory);
+
   return (
     <div className="p-4 bg-white dark:bg-gray-900 border-t border-gray-200 dark:border-gray-700">
       <AnimatePresence>
@@ -70,6 +84,69 @@ export const MessageInput: React.FC<MessageInputProps> = ({
                   whileTap={{ scale: 0.9 }}
                 >
                   {emoji}
+                </motion.button>
+              ))}
+            </div>
+          </motion.div>
+        )}
+
+        {showSavedReplies && (
+          <motion.div
+            initial={{ opacity: 0, y: 10 }}
+            animate={{ opacity: 1, y: 0 }}
+            exit={{ opacity: 0, y: 10 }}
+            className="mb-3 p-4 bg-gradient-to-r from-blue-50 to-purple-50 dark:from-blue-900/20 dark:to-purple-900/20 rounded-lg border border-blue-200 dark:border-blue-700"
+          >
+            <div className="flex items-center justify-between mb-3">
+              <div className="flex items-center space-x-2">
+                <MessageSquare className="w-5 h-5 text-blue-500" />
+                <h3 className="font-medium text-gray-900 dark:text-white">Saved Replies</h3>
+              </div>
+              <button
+                onClick={() => setShowSavedReplies(false)}
+                className="text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-200"
+              >
+                ✕
+              </button>
+            </div>
+
+            {/* Category Filter */}
+            <div className="mb-3">
+              <div className="relative">
+                <select
+                  value={selectedCategory}
+                  onChange={(e) => setSelectedCategory(e.target.value)}
+                  className="w-full bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-600 rounded-lg px-3 py-2 text-sm appearance-none cursor-pointer"
+                >
+                  {categories.map(category => (
+                    <option key={category} value={category}>
+                      {category === 'all' ? 'All Categories' : category.charAt(0).toUpperCase() + category.slice(1)}
+                    </option>
+                  ))}
+                </select>
+                <ChevronDown className="absolute right-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-gray-400 pointer-events-none" />
+              </div>
+            </div>
+
+            {/* Saved Replies Grid */}
+            <div className="grid grid-cols-1 gap-2 max-h-48 overflow-y-auto">
+              {filteredReplies.map((reply, index) => (
+                <motion.button
+                  key={reply.id}
+                  initial={{ opacity: 0, x: -10 }}
+                  animate={{ opacity: 1, x: 0 }}
+                  transition={{ delay: index * 0.05 }}
+                  onClick={() => useSavedReply(reply.text)}
+                  className="text-left p-3 bg-white dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700 hover:bg-blue-50 dark:hover:bg-blue-900/20 hover:border-blue-300 dark:hover:border-blue-600 transition-all duration-200"
+                  whileHover={{ scale: 1.02 }}
+                  whileTap={{ scale: 0.98 }}
+                >
+                  <div className="flex items-center justify-between">
+                    <span className="text-sm text-gray-900 dark:text-white">{reply.text}</span>
+                    <span className="text-xs text-gray-500 dark:text-gray-400 bg-gray-100 dark:bg-gray-700 px-2 py-1 rounded-full">
+                      {reply.category}
+                    </span>
+                  </div>
                 </motion.button>
               ))}
             </div>
@@ -129,6 +206,16 @@ export const MessageInput: React.FC<MessageInputProps> = ({
 
       <form onSubmit={(e) => handleSubmit(e)} className="flex items-center space-x-2">
         <div className="flex space-x-1">
+          <motion.button
+            type="button"
+            onClick={() => setShowSavedReplies(!showSavedReplies)}
+            className="p-2 text-blue-500 hover:text-blue-700 dark:text-blue-400 dark:hover:text-blue-300 hover:bg-blue-50 dark:hover:bg-blue-900/20 rounded-lg transition-colors"
+            whileHover={{ scale: 1.1 }}
+            whileTap={{ scale: 0.9 }}
+          >
+            <MessageSquare className="w-5 h-5" />
+          </motion.button>
+
           <motion.button
             type="button"
             onClick={() => setShowEmojis(!showEmojis)}
