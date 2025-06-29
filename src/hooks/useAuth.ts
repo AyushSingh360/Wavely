@@ -54,114 +54,142 @@ export const useAuth = () => {
         }
       } catch (error) {
         console.error('Error checking auth:', error);
-        setAuthState(prev => ({ ...prev, isLoading: false }));
+        localStorage.removeItem(STORAGE_KEY); // Clear corrupted data
+        setAuthState({
+          user: null,
+          isAuthenticated: false,
+          isLoading: false
+        });
       }
     };
 
     // Simulate loading time for better UX
-    setTimeout(checkExistingAuth, 1000);
+    const timer = setTimeout(checkExistingAuth, 800);
+    return () => clearTimeout(timer);
   }, []);
 
   const login = useCallback(async (email: string, password: string): Promise<{ success: boolean; error?: string }> => {
     setAuthState(prev => ({ ...prev, isLoading: true }));
 
-    // Simulate API call delay
-    await new Promise(resolve => setTimeout(resolve, 1500));
+    try {
+      // Simulate API call delay
+      await new Promise(resolve => setTimeout(resolve, 1200));
 
-    // Simple validation
-    if (!email || !password) {
+      // Simple validation
+      if (!email || !password) {
+        setAuthState(prev => ({ ...prev, isLoading: false }));
+        return { success: false, error: 'Please fill in all fields' };
+      }
+
+      if (!email.includes('@')) {
+        setAuthState(prev => ({ ...prev, isLoading: false }));
+        return { success: false, error: 'Please enter a valid email address' };
+      }
+
+      if (password.length < 6) {
+        setAuthState(prev => ({ ...prev, isLoading: false }));
+        return { success: false, error: 'Password must be at least 6 characters' };
+      }
+
+      // Create mock user
+      const randomProfile = mockUserProfiles[Math.floor(Math.random() * mockUserProfiles.length)];
+      const user: AuthUser = {
+        id: Date.now().toString(),
+        name: randomProfile.name,
+        email,
+        avatar: randomProfile.avatar,
+        createdAt: new Date()
+      };
+
+      // Store in localStorage
+      localStorage.setItem(STORAGE_KEY, JSON.stringify(user));
+
+      setAuthState({
+        user,
+        isAuthenticated: true,
+        isLoading: false
+      });
+
+      return { success: true };
+    } catch (error) {
+      console.error('Login error:', error);
       setAuthState(prev => ({ ...prev, isLoading: false }));
-      return { success: false, error: 'Please fill in all fields' };
+      return { success: false, error: 'An unexpected error occurred. Please try again.' };
     }
-
-    if (!email.includes('@')) {
-      setAuthState(prev => ({ ...prev, isLoading: false }));
-      return { success: false, error: 'Please enter a valid email address' };
-    }
-
-    if (password.length < 6) {
-      setAuthState(prev => ({ ...prev, isLoading: false }));
-      return { success: false, error: 'Password must be at least 6 characters' };
-    }
-
-    // Create mock user
-    const randomProfile = mockUserProfiles[Math.floor(Math.random() * mockUserProfiles.length)];
-    const user: AuthUser = {
-      id: Date.now().toString(),
-      name: randomProfile.name,
-      email,
-      avatar: randomProfile.avatar,
-      createdAt: new Date()
-    };
-
-    // Store in localStorage
-    localStorage.setItem(STORAGE_KEY, JSON.stringify(user));
-
-    setAuthState({
-      user,
-      isAuthenticated: true,
-      isLoading: false
-    });
-
-    return { success: true };
   }, []);
 
   const signup = useCallback(async (name: string, email: string, password: string): Promise<{ success: boolean; error?: string }> => {
     setAuthState(prev => ({ ...prev, isLoading: true }));
 
-    // Simulate API call delay
-    await new Promise(resolve => setTimeout(resolve, 2000));
+    try {
+      // Simulate API call delay
+      await new Promise(resolve => setTimeout(resolve, 1500));
 
-    // Simple validation
-    if (!name || !email || !password) {
+      // Simple validation
+      if (!name || !email || !password) {
+        setAuthState(prev => ({ ...prev, isLoading: false }));
+        return { success: false, error: 'Please fill in all fields' };
+      }
+
+      if (name.length < 2) {
+        setAuthState(prev => ({ ...prev, isLoading: false }));
+        return { success: false, error: 'Name must be at least 2 characters' };
+      }
+
+      if (!email.includes('@')) {
+        setAuthState(prev => ({ ...prev, isLoading: false }));
+        return { success: false, error: 'Please enter a valid email address' };
+      }
+
+      if (password.length < 6) {
+        setAuthState(prev => ({ ...prev, isLoading: false }));
+        return { success: false, error: 'Password must be at least 6 characters' };
+      }
+
+      // Create user with provided name
+      const randomProfile = mockUserProfiles[Math.floor(Math.random() * mockUserProfiles.length)];
+      const user: AuthUser = {
+        id: Date.now().toString(),
+        name,
+        email,
+        avatar: randomProfile.avatar,
+        createdAt: new Date()
+      };
+
+      // Store in localStorage
+      localStorage.setItem(STORAGE_KEY, JSON.stringify(user));
+
+      setAuthState({
+        user,
+        isAuthenticated: true,
+        isLoading: false
+      });
+
+      return { success: true };
+    } catch (error) {
+      console.error('Signup error:', error);
       setAuthState(prev => ({ ...prev, isLoading: false }));
-      return { success: false, error: 'Please fill in all fields' };
+      return { success: false, error: 'An unexpected error occurred. Please try again.' };
     }
-
-    if (name.length < 2) {
-      setAuthState(prev => ({ ...prev, isLoading: false }));
-      return { success: false, error: 'Name must be at least 2 characters' };
-    }
-
-    if (!email.includes('@')) {
-      setAuthState(prev => ({ ...prev, isLoading: false }));
-      return { success: false, error: 'Please enter a valid email address' };
-    }
-
-    if (password.length < 6) {
-      setAuthState(prev => ({ ...prev, isLoading: false }));
-      return { success: false, error: 'Password must be at least 6 characters' };
-    }
-
-    // Create user with provided name
-    const randomProfile = mockUserProfiles[Math.floor(Math.random() * mockUserProfiles.length)];
-    const user: AuthUser = {
-      id: Date.now().toString(),
-      name,
-      email,
-      avatar: randomProfile.avatar,
-      createdAt: new Date()
-    };
-
-    // Store in localStorage
-    localStorage.setItem(STORAGE_KEY, JSON.stringify(user));
-
-    setAuthState({
-      user,
-      isAuthenticated: true,
-      isLoading: false
-    });
-
-    return { success: true };
   }, []);
 
   const logout = useCallback(() => {
-    localStorage.removeItem(STORAGE_KEY);
-    setAuthState({
-      user: null,
-      isAuthenticated: false,
-      isLoading: false
-    });
+    try {
+      localStorage.removeItem(STORAGE_KEY);
+      setAuthState({
+        user: null,
+        isAuthenticated: false,
+        isLoading: false
+      });
+    } catch (error) {
+      console.error('Logout error:', error);
+      // Force logout even if localStorage fails
+      setAuthState({
+        user: null,
+        isAuthenticated: false,
+        isLoading: false
+      });
+    }
   }, []);
 
   return {

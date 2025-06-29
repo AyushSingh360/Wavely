@@ -19,17 +19,28 @@ export const AuthPage: React.FC<AuthPageProps> = ({ onLogin, onSignup, isLoading
   });
   const [showPassword, setShowPassword] = useState(false);
   const [error, setError] = useState('');
+  const [isSubmitting, setIsSubmitting] = useState(false);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    if (isSubmitting) return; // Prevent double submission
+    
     setError('');
+    setIsSubmitting(true);
 
-    const result = isLoginMode 
-      ? await onLogin(formData.email, formData.password)
-      : await onSignup(formData.name, formData.email, formData.password);
+    try {
+      const result = isLoginMode 
+        ? await onLogin(formData.email, formData.password)
+        : await onSignup(formData.name, formData.email, formData.password);
 
-    if (!result.success && result.error) {
-      setError(result.error);
+      if (!result.success && result.error) {
+        setError(result.error);
+      }
+    } catch (error) {
+      console.error('Auth error:', error);
+      setError('An unexpected error occurred. Please try again.');
+    } finally {
+      setIsSubmitting(false);
     }
   };
 
@@ -39,10 +50,13 @@ export const AuthPage: React.FC<AuthPageProps> = ({ onLogin, onSignup, isLoading
   };
 
   const toggleMode = () => {
+    if (isSubmitting) return; // Prevent mode change during submission
     setIsLoginMode(!isLoginMode);
     setError('');
     setFormData({ name: '', email: '', password: '' });
   };
+
+  const isFormDisabled = isLoading || isSubmitting;
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-blue-50 via-purple-50 to-teal-50 dark:from-gray-900 dark:via-gray-800 dark:to-gray-900 flex items-center justify-center p-4">
@@ -127,24 +141,26 @@ export const AuthPage: React.FC<AuthPageProps> = ({ onLogin, onSignup, isLoading
           <div className="flex justify-center mb-6">
             <div className="bg-gray-100 dark:bg-gray-800 rounded-full p-1 flex">
               <button
-                onClick={() => !isLoading && setIsLoginMode(true)}
+                type="button"
+                onClick={() => !isFormDisabled && setIsLoginMode(true)}
                 className={`px-6 py-2 rounded-full text-sm font-medium transition-all duration-200 ${
                   isLoginMode
                     ? 'bg-blue-500 text-white shadow-lg'
                     : 'text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-gray-200'
-                }`}
-                disabled={isLoading}
+                } ${isFormDisabled ? 'cursor-not-allowed opacity-50' : 'cursor-pointer'}`}
+                disabled={isFormDisabled}
               >
                 Login
               </button>
               <button
-                onClick={() => !isLoading && setIsLoginMode(false)}
+                type="button"
+                onClick={() => !isFormDisabled && setIsLoginMode(false)}
                 className={`px-6 py-2 rounded-full text-sm font-medium transition-all duration-200 ${
                   !isLoginMode
                     ? 'bg-blue-500 text-white shadow-lg'
                     : 'text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-gray-200'
-                }`}
-                disabled={isLoading}
+                } ${isFormDisabled ? 'cursor-not-allowed opacity-50' : 'cursor-pointer'}`}
+                disabled={isFormDisabled}
               >
                 Sign Up
               </button>
@@ -168,8 +184,9 @@ export const AuthPage: React.FC<AuthPageProps> = ({ onLogin, onSignup, isLoading
                       value={formData.name}
                       onChange={(e) => handleInputChange('name', e.target.value)}
                       className="w-full pl-12 pr-4 py-3 bg-gray-50 dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all duration-200 text-gray-900 dark:text-white placeholder-gray-500 dark:placeholder-gray-400"
-                      disabled={isLoading}
+                      disabled={isFormDisabled}
                       required={!isLoginMode}
+                      autoComplete="name"
                     />
                   </div>
                 </motion.div>
@@ -184,8 +201,9 @@ export const AuthPage: React.FC<AuthPageProps> = ({ onLogin, onSignup, isLoading
                 value={formData.email}
                 onChange={(e) => handleInputChange('email', e.target.value)}
                 className="w-full pl-12 pr-4 py-3 bg-gray-50 dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all duration-200 text-gray-900 dark:text-white placeholder-gray-500 dark:placeholder-gray-400"
-                disabled={isLoading}
+                disabled={isFormDisabled}
                 required
+                autoComplete="email"
               />
             </div>
 
@@ -197,14 +215,15 @@ export const AuthPage: React.FC<AuthPageProps> = ({ onLogin, onSignup, isLoading
                 value={formData.password}
                 onChange={(e) => handleInputChange('password', e.target.value)}
                 className="w-full pl-12 pr-12 py-3 bg-gray-50 dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all duration-200 text-gray-900 dark:text-white placeholder-gray-500 dark:placeholder-gray-400"
-                disabled={isLoading}
+                disabled={isFormDisabled}
                 required
+                autoComplete={isLoginMode ? "current-password" : "new-password"}
               />
               <button
                 type="button"
                 onClick={() => setShowPassword(!showPassword)}
                 className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-400 hover:text-gray-600 dark:hover:text-gray-300 transition-colors"
-                disabled={isLoading}
+                disabled={isFormDisabled}
               >
                 {showPassword ? <EyeOff className="w-5 h-5" /> : <Eye className="w-5 h-5" />}
               </button>
@@ -227,10 +246,11 @@ export const AuthPage: React.FC<AuthPageProps> = ({ onLogin, onSignup, isLoading
               type="submit"
               variant="primary"
               size="lg"
-              loading={isLoading}
+              loading={isSubmitting}
+              disabled={isFormDisabled}
               className="w-full bg-gradient-to-r from-blue-500 to-purple-500 hover:from-blue-600 hover:to-purple-600 text-white font-semibold py-3 rounded-xl shadow-lg hover:shadow-xl transition-all duration-200"
             >
-              {isLoading ? (
+              {isSubmitting ? (
                 <div className="flex items-center space-x-2">
                   <LoadingSpinner size="sm" />
                   <span>{isLoginMode ? 'Signing In...' : 'Creating Account...'}</span>
@@ -245,9 +265,10 @@ export const AuthPage: React.FC<AuthPageProps> = ({ onLogin, onSignup, isLoading
             <p className="text-gray-600 dark:text-gray-400 text-sm">
               {isLoginMode ? "Don't have an account?" : "Already have an account?"}
               <button
+                type="button"
                 onClick={toggleMode}
                 className="ml-1 text-blue-500 hover:text-blue-600 dark:text-blue-400 dark:hover:text-blue-300 font-medium transition-colors"
-                disabled={isLoading}
+                disabled={isFormDisabled}
               >
                 {isLoginMode ? 'Sign Up' : 'Sign In'}
               </button>
@@ -264,6 +285,11 @@ export const AuthPage: React.FC<AuthPageProps> = ({ onLogin, onSignup, isLoading
             <p className="text-xs text-gray-600 dark:text-gray-400 text-center">
               💡 <strong>Demo Mode:</strong> Use any email and password (6+ characters) to explore Wavely!
             </p>
+            <div className="mt-2 text-center">
+              <p className="text-xs text-gray-500 dark:text-gray-500">
+                Try: <code className="bg-gray-200 dark:bg-gray-700 px-1 rounded">demo@wavely.com</code> / <code className="bg-gray-200 dark:bg-gray-700 px-1 rounded">password123</code>
+              </p>
+            </div>
           </motion.div>
         </motion.div>
 
